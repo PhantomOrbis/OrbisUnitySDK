@@ -35,7 +35,7 @@ public class OrbisTag : Editor
             if (location.Length == 0)
                 continue;
 
-            if (!InternalEditorUtility.tags.Contains(location))
+            if (InternalEditorUtility.tags.Contains(location))
             {
                 InternalEditorUtility.RemoveTag(location);
             }            
