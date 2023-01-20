@@ -3,9 +3,12 @@
   "version": "0.0.1",
   "displayName": "Orbis",
   "description": "Orbis export package",
-  "unity": "2018.4",
+  "unity": "2019.3",
   "unityRelease": "0b4",
-  "dependencies": {},
+  "dependencies": 
+  {
+    "com.unity.addressables": "1.19.19"
+  },
   "keywords": [
     "orbis",
     "common"
