@@ -2,7 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Orbis
+namespace Orbis
 {
+
+    public class Orbis
+    {
+        
+    }
 
 }

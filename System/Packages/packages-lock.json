@@ -1,13 +1,5 @@
 {
   "dependencies": {
-    "com.phantomorbis.export": {
-      "version": "file:../Assets/Orbis",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.addressables": "1.19.19"
-      }
-    },
     "com.unity.addressables": {
       "version": "1.19.19",
       "depth": 0,
