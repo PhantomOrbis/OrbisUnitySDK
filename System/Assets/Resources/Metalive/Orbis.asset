@@ -12,3 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 315b255ee56bbae4ba9b6253626d5d0b, type: 3}
   m_Name: Orbis
   m_EditorClassIdentifier: 
+  account:
+  - connect: 0
+    remember: 0
+    security: 1
+    user: root
+    password: 0000
+    email: 
