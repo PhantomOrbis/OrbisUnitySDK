@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
@@ -34,7 +35,7 @@ namespace Orbis
 
         #region UnityMethod
 
-
+        // Click check
         public static bool IsClick([CallerMemberName] string memberName = "")
         {
             string member = memberName + DateTime.Now.ToString();
@@ -90,11 +91,13 @@ namespace Orbis
         {
             if(data.account.Find(x => x.connect == OrbisAccountConnect.Connect) == null)
             {
+                Debug.Log("Account");
                 Account();
             }
             else
             {
-
+                Debug.Log("DashBoard");
+                DashBoard();
             }            
         }
         
@@ -106,17 +109,21 @@ namespace Orbis
             //    Debug.Log(screen.width + "x" + screen.height);
             //}
 
-            var editor = CreateInstance<OrbisEditorAccountWindow>();                        
-            var x = (Screen.currentResolution.width - editor.Size().x) * 0.5f;
-            var y = (Screen.currentResolution.height - editor.Size().y) * 0.5f;
-            
-            var window = EditorWindow.GetWindow(typeof(OrbisEditorAccountWindow), false, "[Orbis] Account");                           
-            window.ShowAsDropDown(new Rect(0, 0, x, y), new Vector2(editor.Size().x, editor.Size().y));            
+            var window = EditorWindow.GetWindow<OrbisEditorAccountWindow>();
+            var x = (Screen.currentResolution.width - window.Area().x) * 0.5f;
+            var y = (Screen.currentResolution.height - window.Area().y) * 0.5f;
+
+            window.position = new Rect(x, y, window.Area().x, window.Area().y);
+            window.titleContent = new GUIContent("[Orbis] Account");
+            window.minSize = window.maxSize = new Vector2(window.Area().x, window.Area().y);
+            window.Show();                                    
         }
         
         public static void DashBoard()
         {
-
+            var window = CreateInstance<OrbisEditorDashBoardWindow>();
+            window.titleContent = new GUIContent("[Orbis] DashBoard");
+            window.Show();
         }
 
         #endregion
@@ -124,13 +131,78 @@ namespace Orbis
 
     public class OrbisEditorDashBoardWindow : EditorWindow
     {
-        private void OnGUI()
+        #region UnityVariable
+
+        public Texture2D category;
+
+        #endregion
+
+
+
+        #region UnityReturn
+
+        public Vector2 Area()
         {
-            if (Event.current.keyCode == KeyCode.Escape)
-            {
-                Close();
-            }
+            var window = GetWindow<OrbisEditorDashBoardWindow>();
+            return new Vector2(window.maxSize.x, window.maxSize.y);
         }
+
+        public Vector2 Margin()
+        {
+            return new Vector2(5, 5);
+        }
+
+        #endregion
+
+
+
+        #region UnityMethod
+
+        private void OnGUI()
+        {            
+            GUILayout.BeginArea(new Rect(0, 0, 4000, 4000));
+            {
+                GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+                boxStyle.normal.background = MakeBackgroundTexture(2, 2, OrbisColor.editor);
+
+                GUILayout.BeginHorizontal("box", boxStyle, GUILayout.MaxWidth(4000), GUILayout.MaxHeight(40));
+                {
+                    GUIStyle categoryStyle = new GUIStyle(GUI.skin.button);
+                    categoryStyle.normal.background = MakeBackgroundTexture(2, 2, OrbisColor.editor);
+
+                    //if (category == null)
+                    //{
+                    //    category = EditorGUIUtility.Load("Assets/Orbis/Editor/Src/Icon/category.png") as Texture2D;
+                    //}
+
+                    if (GUILayout.Button("+", categoryStyle, GUILayout.Width(60), GUILayout.Height(40)))
+                    {
+                        Debug.Log("Button");
+                    }
+                }                
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndArea();
+        }
+
+        private Texture2D MakeBackgroundTexture(int width, int height, Color color)
+        {
+            Color[] pixels = new Color[width * height];
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = color;
+            }
+
+            Texture2D backgroundTexture = new Texture2D(width, height);
+
+            backgroundTexture.SetPixels(pixels);
+            backgroundTexture.Apply();
+
+            return backgroundTexture;
+        }
+
+        #endregion
     }
 
     public class OrbisEditorAccountWindow : EditorWindow
@@ -148,56 +220,20 @@ namespace Orbis
         // Option - remember
         private bool remember = false;
 
-        public string test = "";
-
         #endregion;
 
 
 
-        #region UnityMethod
-        
-        public void Login()
-        {
-            if (OrbisEditor.IsClick())
-                return;
-            
-            if (OrbisEditor.data.account.Find(x => x.user == user.Trim()) != null)
-            {
-                OrbisAccount account = OrbisEditor.data.account.Find(x => x.user == user.Trim());
-                if(account.password.Equals(security))
-                {                    
-                    account.connect = OrbisAccountConnect.Connect;
-                    if (remember)
-                    {
-                        account.remember = OrbisAccountRemember.Remember;                        
-                    }
-                    
-                    EditorUtility.SetDirty(OrbisEditor.data);
-                    Close();
-                }
-                else
-                {
+        #region UnityReturn
 
-                    //var lastRect = GUILayoutUtility.GetLastRect();
-                    
-
-
-                }
-            }            
-            else
-            {
-                Debug.Log("Login fail - user no search");
-                // 회원이 존재하지않음
-                // -> 관리자한테 요청필요
-                // 
-                var popup = new OrbisEditorAccountPopup();
-                PopupWindow.Show(new Rect(0, 0, 200f, 50f), popup);
-            }
-        }
-                
-        public Vector2 Size()
+        public Vector2 Area()
         {
             return new Vector2(280, 420);
+        }
+
+        public Vector2 Field()
+        {
+            return new Vector2(240, 4);
         }
 
         public Vector2 Margin()
@@ -205,12 +241,75 @@ namespace Orbis
             return new Vector2(20, 20);
         }
 
+        #endregion
+
+
+
+        #region UnityMethod
+
+        public void Login()
+        {
+            if (OrbisEditor.IsClick())
+                return;
+
+            if (string.IsNullOrEmpty(user) || user.Equals("User"))
+            {
+                Popup("Please enter your ID!");
+            }
+
+            if (string.IsNullOrEmpty(security) || password.Equals("Password"))
+            {
+                Popup("Please enter your Password!");
+            }
+
+            if (OrbisEditor.data.account.Find(x => x.user == user.Trim()) != null)
+            {
+                OrbisAccount account = OrbisEditor.data.account.Find(x => x.user == user.Trim());
+                if (account.password.Equals(security))
+                {
+                    account.connect = OrbisAccountConnect.Connect;
+                    if (remember)
+                    {
+                        account.remember = OrbisAccountRemember.Remember;
+                    }
+
+                    EditorUtility.SetDirty(OrbisEditor.data);
+                    Close();
+
+
+                    // Login success open manager
+                    OrbisEditor.Manager();
+                }
+                else
+                {
+                    Popup("Accounts do not match!");
+                }
+            }
+            else
+            {
+                Popup("Account does not exist!");
+            }
+        }
+
+        public void Popup(string message)
+        {
+            var popup = new OrbisEditorAccountPopup();
+            popup.message = message;
+            PopupWindow.Show(new Rect(new Vector2(-10, -50), popup.GetWindowSize()), popup);
+        }
+
+        #endregion
+
+
+
+        #region UnityLifecycle
+
         void OnGUI()
-        {            
+        {
             // Escape => Account window close
             if (Event.current.keyCode == KeyCode.Escape)
             {
-                Close();                
+                Close();
             }
 
             if (Event.current.keyCode == KeyCode.Return)
@@ -218,8 +317,8 @@ namespace Orbis
                 Login();
             }
 
-            
-            GUILayout.BeginArea(new Rect(Vector2.zero, Size()));
+
+            GUILayout.BeginArea(new Rect(Margin(), Area()));
             {
                 GUILayout.BeginVertical();
                 {
@@ -230,7 +329,7 @@ namespace Orbis
                         titleStyle.fontSize = 28;
                         titleStyle.fontStyle = FontStyle.Bold;
                         titleStyle.alignment = TextAnchor.MiddleLeft;
-                        GUILayout.Label("Welcome!", titleStyle, GUILayout.Width(280), GUILayout.Height(32));
+                        GUILayout.Label("Welcome!", titleStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 8f));
                     }
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
@@ -239,7 +338,7 @@ namespace Orbis
                         contentStyle.fontSize = 12;
                         contentStyle.alignment = TextAnchor.UpperLeft;
                         contentStyle.padding = new RectOffset(4, 0, 0, 0);
-                        GUILayout.Label("Sign in to continue", contentStyle, GUILayout.Width(280), GUILayout.Height(16));
+                        GUILayout.Label("Sign in to continue", contentStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 4f));
                     }
                     GUILayout.EndHorizontal();
                     GUILayout.Space(44);
@@ -253,7 +352,7 @@ namespace Orbis
                         userStyle.fontSize = 12;
                         userStyle.alignment = TextAnchor.MiddleLeft;
                         userStyle.padding = new RectOffset(12, 0, 0, 0);
-                        user = GUILayout.TextField(user, userStyle, GUILayout.Width(280), GUILayout.Height(32));
+                        user = GUILayout.TextField(user, userStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 8f));
 
                         if (GUI.GetNameOfFocusedControl().Equals(focus))
                         {
@@ -275,7 +374,7 @@ namespace Orbis
                         passwordStyle.fontSize = 12;
                         passwordStyle.alignment = TextAnchor.MiddleLeft;
                         passwordStyle.padding = new RectOffset(12, 0, 0, 0);
-                        password = GUILayout.TextField(password, passwordStyle, GUILayout.Width(280), GUILayout.Height(32));
+                        password = GUILayout.TextField(password, passwordStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 8f));
 
                         if (GUI.GetNameOfFocusedControl().Equals(focus))
                         {
@@ -321,7 +420,7 @@ namespace Orbis
                         rememberStyle.alignment = TextAnchor.MiddleLeft;
                         rememberStyle.padding = new RectOffset(20, 0, 0, 2);
 
-                        remember = GUILayout.Toggle(remember, "Remember Me?", rememberStyle, GUILayout.Width(280), GUILayout.Height(24));
+                        remember = GUILayout.Toggle(remember, "Remember Me?", rememberStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 6f));
                     }
                     GUILayout.EndHorizontal();
                     GUILayout.Space(16);
@@ -333,8 +432,8 @@ namespace Orbis
                         loginStyle.fontStyle = FontStyle.Bold;
                         loginStyle.alignment = TextAnchor.MiddleCenter;
 
-                        if (GUILayout.Button("Login", loginStyle, GUILayout.Width(280), GUILayout.Height(32)))
-                        {                            
+                        if (GUILayout.Button("Login", loginStyle, GUILayout.Width(Field().x), GUILayout.Height(Field().y * 8f)))
+                        {
                             Login();
                         }
                     }
@@ -354,60 +453,34 @@ namespace Orbis
     }
 
     public class OrbisEditorAccountPopup : PopupWindowContent
-    {
+    {        
+        public string message = "";  
+        
         public override void OnGUI(Rect rect)
         {
-            GUILayout.BeginArea(new Rect(5, 5, 200, 340));
+            GUILayout.BeginArea(new Rect(new Vector2(0, 0), GetWindowSize()));
             {
-                GUILayout.BeginVertical("box", GUILayout.MaxWidth(200), GUILayout.MaxHeight(340));
-                {
-                    GUILayout.Label("Test");
+                GUILayout.BeginVertical("box", GUILayout.MaxWidth(GetWindowSize().x), GUILayout.MaxHeight(GetWindowSize().y));
+                {                    
+                    GUILayout.FlexibleSpace();
+
+                    GUIStyle style = new GUIStyle(GUI.skin.label);
+                    style.fontSize = 12;
+                    style.fontStyle = FontStyle.Bold;
+                    style.alignment = TextAnchor.MiddleCenter;
+                    style.padding = new RectOffset(0, 0, 0, 2);
+                    GUILayout.Label(message, style);
+
+                    GUILayout.FlexibleSpace();
                 }
-                GUILayout.EndVertical();
+                GUILayout.EndVertical();                
             }
             GUILayout.EndArea();            
         }
 
         public override Vector2 GetWindowSize()
         {
-            return base.GetWindowSize();
-        }
-    }
-
-    public class LayerWindowSavePopup : PopupWindowContent
-    {
-        public override void OnGUI(Rect rect)
-        {
-            GUILayout.Label("!Do you sure you want to clear it?");
-            GUILayout.BeginArea(new Rect(116, 25, 40, 20));
-
-            GUIStyle no = new GUIStyle(GUI.skin.button);
-            no.fontStyle = FontStyle.Bold;
-
-            if (GUILayout.Button("No", no))
-            {
-                editorWindow.Close();
-            }
-
-            GUILayout.EndArea();
-            GUILayout.BeginArea(new Rect(158, 25, 40, 20));
-
-            GUIStyle yes = new GUIStyle(GUI.skin.button);
-            yes.normal.textColor = new Color(151 / 255f, 157 / 255f, 242 / 255f);
-            yes.fontStyle = FontStyle.Bold;
-            yes.alignment = TextAnchor.MiddleCenter;
-
-            if (GUILayout.Button("Yes", yes))
-            {                
-                Debug.Log("Save user layers complete");
-                editorWindow.Close();
-            }
-            GUILayout.EndArea();
-        }
-
-        public override Vector2 GetWindowSize()
-        {
-            return new Vector2(200, 50);
+            return new Vector2(260, 40);
         }
     }
 }
